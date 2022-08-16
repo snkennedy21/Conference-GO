@@ -6,7 +6,6 @@ from .models import Presentation
 ######################
 # List Presentations #
 ######################
-
 class PresentationListEncoder(ModelEncoder):
     model = Presentation
     properties = [
