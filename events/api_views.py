@@ -98,12 +98,19 @@ class ConferenceDetailEncoder(ModelEncoder):
         "location": LocationListEncoder(),
     }
 
+@require_http_methods(["GET", "PUT", "DELETE"])
 def api_show_conference(request, pk):
-    conference = Conference.objects.get(id=pk)
-    return JsonResponse(
-        conference,
-        encoder=ConferenceDetailEncoder, safe=False
-    )
+    if request.method == "GET":
+        conference = Conference.objects.get(id=pk)
+        return JsonResponse(
+            conference,
+            encoder=ConferenceDetailEncoder, safe=False
+        )
+    
+    elif request.method == "DELETE":
+        count, _ = Conference.objects.filter(id=pk).delete()
+        return JsonResponse({"deleted": count > 0})
+
 
 
 #########################
