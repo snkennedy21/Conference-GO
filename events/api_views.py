@@ -1,7 +1,9 @@
 from django.http import JsonResponse
 from .models import Conference, Location
 from common.json import ModelEncoder
-
+from django.views.decorators.http import require_http_methods
+import json
+from .models import State
 
 
 ####################
@@ -13,13 +15,33 @@ class ConferenceListEncoder(ModelEncoder):
         "name"
     ]
 
+@require_http_methods(["GET", "POST"])
 def api_list_conferences(request):
-    conferences = Conference.objects.all()
-    return JsonResponse(
-        {"conferences": conferences},
-        encoder=ConferenceListEncoder,
-    )
+    if request.method == "GET":
+        conferences = Conference.objects.all()
+        return JsonResponse(
+            {"conferences": conferences},
+            encoder=ConferenceListEncoder,
+        )
+    else:
+        content = json.loads(request.body)
 
+        try:
+            location = Location.objects.get(id=content["location"])
+            content["location"] = location
+        except:
+            return JsonResponse(
+                {"message": "Invalid location id"},
+                status=400,
+            )
+        
+        conference = Conference.objects.create(**content)
+        return JsonResponse(
+            conference,
+            encoder=ConferenceDetailEncoder,
+            safe=False,
+        )
+        
 ##################
 # List Locations #
 ##################
@@ -27,12 +49,33 @@ class LocationListEncoder(ModelEncoder):
     model = Location
     properties = ["name"]
 
+@require_http_methods(["GET", "POST"])
 def api_list_locations(request):
-    locations = Location.objects.all()
-    return JsonResponse(
-        {"locations": locations},
-        encoder = LocationListEncoder
-    )
+    if request.method == "GET":
+        locations = Location.objects.all()
+        return JsonResponse(
+            {"locations": locations},
+            encoder = LocationListEncoder
+        )
+    else:
+        content = json.loads(request.body)
+
+        try:
+            state = State.objects.get(abbreviation=content["state"])
+            content["state"] = state
+        except State.DoesNotExist:
+            return JsonResponse(
+            {"message": "Invalid state abbreviation"},
+            status=400
+        )
+
+        location = Location.objects.create(**content)
+        return JsonResponse(
+            location,
+            encoder=LocationDetailEncoder,
+            safe=False,
+        )
+
 
 
 ###########################
@@ -79,10 +122,39 @@ class LocationDetailEncoder(ModelEncoder):
     def get_extra_data(self, o):
         return { "state": o.state.abbreviation }
 
+@require_http_methods(["GET", "PUT", "DELETE"])
 def api_show_location(request, pk):
-    location = Location.objects.get(id=pk)
-    return JsonResponse(
-        location,
-        encoder=LocationDetailEncoder,
-        safe=False,
-    )
+    if request.method == "GET":
+        location = Location.objects.get(id=pk)
+        return JsonResponse(
+            location,
+            encoder=LocationDetailEncoder,
+            safe=False,
+        )
+    elif request.method == "DELETE":
+        count, _ = Location.objects.filter(id=pk).delete()
+        return JsonResponse({"deleted": count > 0})
+    
+    else:
+        content = json.loads(request.body)
+        try:
+            if "state" in content:
+                state = State.objects.get(abbreviation=content["state"])
+                content["state"] = state
+        except State.DoesNotExist:
+            return JsonResponse(
+                {"message": "Invalid state abbreviation"},
+                status=400,
+            )
+        
+
+        Location.objects.filter(id=pk).update(**content)
+
+        location = Location.objects.get(id=pk)
+        return JsonResponse(
+            location,
+            encoder=LocationDetailEncoder,
+            safe=False,
+        )
+
+

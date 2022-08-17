@@ -4,6 +4,7 @@ from .models import Attendee
 from events.api_views import ConferenceListEncoder
 
 
+
 #######################
 # Show Attendees List #
 #######################
