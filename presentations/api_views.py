@@ -1,6 +1,8 @@
 from django.http import JsonResponse
 from common.json import ModelEncoder
 from .models import Presentation
+from django.views.decorators.http import require_http_methods
+import json
 
 
 ######################
@@ -15,12 +17,15 @@ class PresentationListEncoder(ModelEncoder):
     def get_extra_data(self, o):
         return { "status": o.status.name }
 
+@require_http_methods(["GET", "POST"])
 def api_list_presentations(request, conference_id):
-    presentations = Presentation.objects.all()
-    return JsonResponse(
-        {"presentations": presentations},
-        encoder=PresentationListEncoder,
-    )
+    if request.method == "GET":
+        presentations = Presentation.objects.all()
+        return JsonResponse(
+            {"presentations": presentations},
+            encoder=PresentationListEncoder,
+        )
+
 
 
 #############################
@@ -37,10 +42,15 @@ class PresentationDetailEncoder(ModelEncoder):
         "created",
     ]
 
+@require_http_methods(["GET", "PUT", "DELETE"])
 def api_show_presentation(request, pk):
-    presentation = Presentation.objects.get(id=pk)
-    return JsonResponse(
-        presentation,
-        encoder=PresentationDetailEncoder,
-        safe=False,
-    )
+    if request.method == "GET":
+        presentation = Presentation.objects.get(id=pk)
+        return JsonResponse(
+            presentation,
+            encoder=PresentationDetailEncoder,
+            safe=False,
+        )
+    elif request.method == "DELETE":
+        count, _ = Presentation.objects.filter(id=pk).delete()
+        return JsonResponse({"deleted": count > 0})
