@@ -60,12 +60,41 @@ class AttendeeDetailEncoder(ModelEncoder):
         "conference": ConferenceListEncoder(),
     }
 
-
+@require_http_methods(["GET", "PUT", "DELETE"])
 def api_show_attendee(request, pk):
-    attendee = Attendee.objects.get(id=pk)
-    return JsonResponse(
-        attendee,
-        encoder=AttendeeDetailEncoder,
-        safe=False,
-    )
+    if request.method == "GET":
+        attendee = Attendee.objects.get(id=pk)
+        return JsonResponse(
+            attendee,
+            encoder=AttendeeDetailEncoder,
+            safe=False,
+        )
+
+    elif request.method == "DELETE":
+        count, _ = Attendee.objects.filter(id=pk).delete()
+        return JsonResponse({"deleted": count > 0})
+
+    
+    else:
+        content = json.loads(request.body)
+        
+        try:
+            if "conference" in content:
+                conference = Conference.objects.get(id=content["conference"])
+                content["conference"] = conference
+        except Conference.DoesNotExist:
+            return JsonResponse(
+                {"message": "Invalid"},
+                status=400,
+            )
+
+        Attendee.objects.filter(id=pk).update(**content)
+
+        attendee = Attendee.objects.get(id=pk)
+
+        return JsonResponse(
+            attendee,
+            encoder=AttendeeDetailEncoder,
+            safe=False,
+        )
 

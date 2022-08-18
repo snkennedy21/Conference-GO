@@ -99,26 +99,3 @@ def api_show_presentation(request, pk):
             encoder=PresentationDetailEncoder,
             safe=False,
         )
-
-
-
-        content = json.loads(request.body)
-        try:
-            if "location" in content:
-                location = Location.objects.get(id=content["location"])
-                content["location"] = location
-        
-        except Location.DoesNotExist:
-            JsonResponse(
-                {'message': "No location for that id"}
-            )
-
-        Conference.objects.filter(id=pk).update(**content)
-
-        conference = Conference.objects.get(id=pk)
-
-        return JsonResponse(
-            conference,
-            encoder=ConferenceDetailEncoder,
-            safe=False,
-        )
