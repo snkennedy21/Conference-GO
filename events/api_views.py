@@ -4,7 +4,7 @@ from common.json import ModelEncoder
 from django.views.decorators.http import require_http_methods
 import json
 from .models import State
-from events.acls import get_picture
+from events.acls import get_picture, get_lat_lon, get_weather
 
 
 ####################
@@ -105,8 +105,14 @@ class ConferenceDetailEncoder(ModelEncoder):
 def api_show_conference(request, pk):
     if request.method == "GET":
         conference = Conference.objects.get(id=pk)
+
+        city = conference.location.city
+        state = conference.location.state
+        
+        weather = get_weather(city, state)
+
         return JsonResponse(
-            conference,
+            {'conference': conference, "weather": weather},
             encoder=ConferenceDetailEncoder, safe=False
         )
     
