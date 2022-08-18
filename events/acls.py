@@ -30,7 +30,10 @@ def get_weather(city, state):
   params = {"lat": lat, "lon": lon, "appid": OPEN_WEATHER_API_KEY, "units": "imperial",}
   response = requests.get(url, params=params)
   json_data = response.json()
-  return {
-    "description": json_data['weather'][0]["description"],
-    "temperature": json_data['main']['temp']
-  }
+  if json_data == {'cod': '400', 'message': 'wrong latitude'}:
+    return None
+  else:
+    return {
+      "description": json_data['weather'][0]["description"],
+      "temperature": json_data['main']['temp']
+    }
