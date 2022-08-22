@@ -1,6 +1,5 @@
 from codecs import latin_1_decode
 from .keys import PEXELS_API_KEY, OPEN_WEATHER_API_KEY
-
 import json
 import requests
 
