@@ -144,7 +144,7 @@ def api_reject_presentation(request, pk):
     presenter_dictionary = {
         "name": presentation.presenter_name,
         "email": presentation.presenter_email,
-        "queue": presentation.title,
+        "title": presentation.title,
     }
     rabbit(presenter_dictionary, queue_name)
     return JsonResponse(

@@ -14,6 +14,7 @@ django.setup()
 def process_approval(ch, method, properties, body):
   print("  Approved %r" % body)
   body = json.loads(body)
+  print(body)
   presenter_name = body["name"]
   presenter_email = body["email"]
   title = body["title"]
@@ -30,6 +31,7 @@ def process_approval(ch, method, properties, body):
 def process_rejections(ch, method, properties, body):
   print("  Rejected %r" % body)
   body = json.loads(body)
+  print(body)
   presenter_name = body["name"]
   presenter_email = body["email"]
   title = body["title"]
@@ -44,20 +46,20 @@ def process_rejections(ch, method, properties, body):
 
 
 
-while True:
-  parameters = pika.ConnectionParameters(host='rabbitmq')
-  connection = pika.BlockingConnection(parameters)
-  channel = connection.channel()
-  channel.queue_declare(queue="presentation_approvals")
-  channel.queue_declare(queue="presentation_rejections")
-  channel.basic_consume(
-      queue="presentation_approvals",
-      on_message_callback=process_approval,
-      auto_ack=True,
-  )
-  channel.basic_consume(
-      queue="presentation_rejections",
-      on_message_callback=process_rejections,
-      auto_ack=True,
-  )
-  channel.start_consuming()
+
+parameters = pika.ConnectionParameters(host='rabbitmq')
+connection = pika.BlockingConnection(parameters)
+channel = connection.channel()
+channel.queue_declare(queue="presentation_approvals")
+channel.queue_declare(queue="presentation_rejections")
+channel.basic_consume(
+    queue="presentation_approvals",
+    on_message_callback=process_approval,
+    auto_ack=True,
+)
+channel.basic_consume(
+    queue="presentation_rejections",
+    on_message_callback=process_rejections,
+    auto_ack=True,
+)
+channel.start_consuming()
