@@ -106,7 +106,7 @@ def api_show_presentation(request, pk):
         )
 
 
-def rabbit(dictionary, que_name):
+def send_presentation_to_queue(dictionary, que_name):
     parameters = pika.ConnectionParameters(host="rabbitmq")
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
@@ -128,7 +128,7 @@ def api_approve_presentation(request, pk):
         "email": presentation.presenter_email,
         "title": presentation.title,
     }
-    rabbit(presenter_dictionary, queue_name)
+    send_presentation_to_queue(presenter_dictionary, queue_name)
     return JsonResponse(
         presentation,
         encoder=PresentationDetailEncoder,
@@ -146,7 +146,7 @@ def api_reject_presentation(request, pk):
         "email": presentation.presenter_email,
         "title": presentation.title,
     }
-    rabbit(presenter_dictionary, queue_name)
+    send_presentation_to_queue(presenter_dictionary, queue_name)
     return JsonResponse(
         presentation,
         encoder=PresentationDetailEncoder,

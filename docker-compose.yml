@@ -20,6 +20,13 @@ services:
     volumes:
       - ./attendees_microservice:/app
 
+  attendees_account_info:
+    build:
+      context: ./attendees_microservice
+      dockerfile: 0./Dockerfile.account_info.dev
+    volumes:
+      - ./attendees_microservice:/app
+
   presentation_workflow:
     build:
       context: ./presentation_workflow
